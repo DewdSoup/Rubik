@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rubik - Real Estate Chatbot</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <img class="header-image" src="realtor.png" alt="Rubik - Real Estate Chatbot">
+        </div>
+        <div class="chat-box" id="chat-box">
+            <!-- Chat messages will appear here -->
+        </div>
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Type your message..." autofocus>
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        function appendMessage(sender, message) {
+            const messageBubble = document.createElement('div');
+            messageBubble.className = `bubble ${sender}-message`;
+            messageBubble.textContent = message;
+            chatBox.appendChild(messageBubble);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'typing-indicator';
+            typingIndicator.textContent = 'Rubik is typing...';
+            chatBox.appendChild(typingIndicator);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typingIndicator = document.querySelector('.typing-indicator');
+            if (typingIndicator) chatBox.removeChild(typingIndicator);
+        }
+
+        async function sendMessage(userMessage) {
+            if (!userMessage) return;
+
+            // Append user's message
+            appendMessage('user', userMessage);
+            userInput.value = '';
+
+            // Show typing indicator
+            showTypingIndicator();
+
+            try {
+                // Send message to the server
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: userMessage }),
+                });
+
+                const data = await response.json();
+
+                // Remove typing indicator
+                removeTypingIndicator();
+
+                // Append bot's reply
+                appendMessage('bot', data.reply);
+
+            } catch (error) {
+                console.error('Error:', error);
+                removeTypingIndicator();
+                appendMessage('bot', 'Oops! Something went wrong.');
+            }
+        }
+
+        // Event listeners
+        sendBtn.addEventListener('click', () => {
+            const userMessage = userInput.value.trim();
+            sendMessage(userMessage);
+        });
+
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const userMessage = userInput.value.trim();
+                sendMessage(userMessage);
+            }
+        });
+
+        // Start the conversation on page load
+        window.addEventListener('load', () => {
+            // Clear the chat box
+            chatBox.innerHTML = '';
+
+            // You can send a welcome message from the bot if needed
+            // sendMessage(''); // Not sending an empty message to avoid confusion
+        });
+    </script>
+</body>
+</html>
